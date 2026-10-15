@@ -11,6 +11,9 @@
 #include "strata/kernels/cpu/iq_avx512.hpp"
 #include "strata/kernels/cpu/kq_avx1.hpp"
 #include "strata/kernels/cpu/kq_avx2.hpp"
+#include "strata/kernels/cpu/iq_avx1.hpp"
+#include "strata/kernels/cpu/nvfp4_avx2.hpp"
+#include "strata/kernels/cpu/nvfp4_avx512.hpp"
 
 #include <atomic>
 #include <cmath>
@@ -180,6 +183,38 @@ void bf16_rows_dot_multi(const uint16_t* w, int rows, int cols, const float* x, 
             out[(size_t) t * rows + r] = s;
         }
     }
+}
+
+// v0.1.43-0.1.44 x86 kernels (AVX1 floor, NVFP4, 128-bit i-quants): not built on aarch64.  The probes say no, so
+// callers stay on ggml-cpu; the row kernels refuse if reached anyway.
+void act_quant_q8_1_avx1(const float* x, int n, ActQ& a) { act_quant_q8_1(x, n, a); }
+void q2_0_gguf_rows_multi_avx1(const uint8_t*, size_t, int, const ActQ* const*, int, float* const*, int, int) {
+    unsupported("the Q2_0 AVX1 kernel");
+}
+void q2_0_gguf_rows_multi_avx1_legacy(const uint8_t*, size_t, int, const ActQ* const*, int, float* const*, int, int) {
+    unsupported("the Q2_0 AVX1 kernel");
+}
+bool iq128_supported(int) noexcept { return false; }
+bool iq128_down_supported(int) noexcept { return false; }
+void iq128_gu_rows(int, const uint8_t*, size_t, size_t, int, const void* const*, int, float* const*, int, int) {
+    unsupported("the i-quant AVX1 kernel");
+}
+void iq128_down_rows(int, const uint8_t*, size_t, int, const void* const*, int, float* const*, int, int) {
+    unsupported("the i-quant AVX1 kernel");
+}
+bool nvfp4_256_fits(int) { return false; }
+bool nvfp4_512_fits(int) { return false; }
+void nvfp4_256_gu_rows(const uint8_t*, size_t, size_t, int, const void* const*, int, float* const*, int, int, float, float) {
+    unsupported("the NVFP4 AVX2 kernel");
+}
+void nvfp4_256_rows(const uint8_t*, size_t, int, const void* const*, int, float* const*, int, int, float) {
+    unsupported("the NVFP4 AVX2 kernel");
+}
+void nvfp4_512_gu_rows(const uint8_t*, size_t, size_t, int, const void* const*, int, float* const*, int, int, float, float) {
+    unsupported("the NVFP4 AVX-512 kernel");
+}
+void nvfp4_512_rows(const uint8_t*, size_t, int, const void* const*, int, float* const*, int, int, float) {
+    unsupported("the NVFP4 AVX-512 kernel");
 }
 
 }  // namespace strata::kernels::cpu
